@@ -1,0 +1,31 @@
+WITH WeeklyData AS (
+  SELECT
+    CASE
+      WHEN DATE(data_date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY) THEN 'Week 1'
+      WHEN DATE(data_date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 14 DAY) THEN 'Week 2'
+      WHEN DATE(data_date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 21 DAY) THEN 'Week 3'
+      WHEN DATE(data_date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 28 DAY) THEN 'Week 4'
+    END AS week_label,
+    query,
+    MIN(sum_top_position) AS min_top_position
+  FROM
+    `seobrein.searchconsole.searchdata_site_impression`
+  WHERE
+    DATE(data_date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 28 DAY)
+    AND search_type = 'WEB'
+    AND query IS NOT NULL
+    AND sum_top_position < 11
+  GROUP BY
+    week_label, query, clicks
+)
+
+SELECT
+  week_label,
+  query,
+  ROUND(AVG(min_top_position)) AS avg_min_top_position
+FROM
+  WeeklyData
+GROUP BY
+  week_label, query
+ORDER BY
+  query, week_label
